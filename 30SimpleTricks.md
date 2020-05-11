@@ -15,7 +15,7 @@
 
 ---
 
-## 1. シーケンスをスライスする
+## 1. シーケンスをスライスするM
 
 いくつか共通なシーケンス型にリスト、タプル、そして文字列があります。ここで別のシーケンスをスライスすると新しいシーケンスを生成できます。次に示す処理では例としてリストを使っていますが、もちろんタプルや文字列、そしてその他のシーケンス型（例えばバイト）にも適用できます。
 
@@ -50,7 +50,7 @@
 
  ```python
  In [9]: a = (1, 2, 3, 4, 5)
- 
+
  In [10]: a[::-1]
  Out[10]: (5, 4, 3, 2, 1)
 
@@ -102,7 +102,7 @@
 
  In [30]: numbers
  Out[30]: [5, 2, 3, 4, 1]
-  
+
  ```
 
 ## 5. シーケンスが空かどうかチェックする
@@ -111,7 +111,7 @@
 
  ```python
  In [31]: empty_list = [{}, '', [], set()]
- 
+
  In [32]: for item in empty_list:
  ...:     if not item:
  ...:         print(f'Do something with the {type(item)}')
@@ -144,10 +144,10 @@ Python の便利な機能の一つにリスト内包表記（ _List Comprehensio
 
  ```python
  In [36]: a = [1, -2, 2, -3, 3, 4, 5, 5, 5]
- 
+
  In [37]: {x*x for x in a}
  Out[37]: {1, 4, 9, 16, 25}
- 
+
  ```
 
 ## 8. ディクショナリ内包表記
@@ -164,92 +164,120 @@ Python の便利な機能の一つにリスト内包表記（ _List Comprehensio
 
 ## 9. ジェネレータ式
 
-ロードアベレージは、システムで一定時間に渡って生じた負荷の平均値を表しています。これらの数値は実行中（現在、実行中または実行待ち）のプロセス数と割り込み不可（DISKまたはネットワーク利用待ち）のプロセス数から計算されます。そのためプロセス数と等価です。
-それじゃロードアベレージは1分、5分、15分前のプロセス数の平均値と考えて良いでしょうか？
-残念ながら、それほど単純ではないことが分かりました。
+Python の「ジェネレータ」はイテレータを生成する便利な方法の一つです。ジェネレータは「なまけ者」（つまり、要求された時に初めて必要なアイテムを生成する）なので、ジェネレータはとてもメモリ効率がよいです。ジェネレータを生成する特別な方法は「ジェネレータ式」を呼び出すことです。ジェネレータ式は構文的にリスト内包表記に似ていますが、大括弧 ``[]`` の代わりに括弧 ``()`` を使います。
 
-ロードアベレージとは数学的には「負荷の平均値を指数関数的に減衰させたもの」らしいです ([Wikipediaより](https://en.wikipedia.org/wiki/Load_(computing)))：
-```
-Mathematically speaking, all three values always average all the system load since the system started up. They all decay exponentially, but they decay at different speeds: they decay exponentially by e after 1, 5, and 15 minutes respectively. Hence, the 1-minute load average consists of 63% (more precisely: 1 - 1/e) of the load from the last minute and 37% (1/e) of the average load since start up, excluding the last minute. For the 5- and 15-minute load averages, the same 63%/37% ratio is computed over 5 minutes and 15 minutes respectively. Therefore, it is not technically accurate that the 1-minute load average only includes the last 60 seconds of activity, as it includes 37% of the activity from the past, but it is correct to state that it includes mostly the last minute.
-```
-こんなのを予想していました？
+次の例で、イテレータを受け取ることが可能な関数の中で直接ジェネレータを使用する場合は括弧 ``()`` を省略できます。
 
-では乱数生成の話に戻ることにしましょう。
+ ```python
+ In [13]: sum(x**2 for x in range(100))
+ Out[13]: 328350
+
+ In [14]: max(x*x for x in range(100))
+ Out[14]: 9801
+
+# 冗長になるので、関数の中で括弧は必要ない
+ In [18]: min((x*-2 for x in range(100)))
+ Out[18]: -198
+
+ ```
+
+## 10. タプルのアンパック
+
+タプルは Python の中でよく使われるデータ構造の一つです。タプルはまさに関連しあう値をまとめたグループであり、一般的な使用法には、それらの要素へのアクセスが含まれます。インデックスを使っても要素にアクセスできますが、アンパックを使う方がもっと便利です。その際はアンダースコア ``_`` を使って不要な要素を指定し、アスタリスク ``*`` を使って名前付きの要素以外の残りの要素を指定できます。
+
+
+ ```python
+ In [19]: items = (0, 'b', 'one', 10, 11, 'zero')
+
+ In [20]: a, b, c, d, e, f = items
+
+ In [21]: print(f)
+
+ In [22]: a, *b, c = items
+
+ In [23]: print(b)
+ ['b', 'one', 10, 11]
+
+ In [24]: *_, a, b = items
+ In [25]: print(a)
+ 11
+
+ ```
+
+## 11. ループで Enumerate() を使う
+
+``enumerate()`` 関数はイテラブルを一つ受け取り、イテレータを生成します。さらに反復する回数を追跡することができます。オプションでカウントを始める数値を指定できます（デフォルトは ``0`` からカウント）。
+
+
+ ```python
+ In [26]: students = ('John', 'Mary', 'Mike')
+
+ In [27]: for i, student in enumerate(students):
+    ...:     print(f'Iteration: {i}, Student: {student}')
+    ...:
+ Iteration: 0, Student: John
+ Iteration: 1, Student: Mary
+ Iteration: 2, Student: Mike
+
+ In [28]: for i, student in enumerate(students, 35001):
+    ...:     print(f'Student Name: {student}, Student ID #: {i}')
+    ...:
+ Student Name: John, Student ID #: 35001
+ Student Name: Mary, Student ID #: 35002
+ Student Name: Mike, Student ID #: 35003
+
+ ```
+
+
+## 12. ループで Reversed() を使う
+
+``reversed()`` 関数は、イテラブルを逆順に並べたものでイテレータを生成する際にループと一緒に使うことがよくあります。
+
+ ```python
+ In [29]: tasks = ['laundary', 'picking up kids', 'gardening', 'cooking']
+
+ In [30]: for task in reversed(tasks):
+    ...:     print(task)
+    ...:                                                                                                                                                                                                                                       cooking
+ gardening
+ picking up kids
+ laundary
+
+ ```
+
+## 13. Zip() 関数
+
+``zip()`` は複数のイテラブルを1対1で対応させ、その結果を連結するのに便利な関数です。特定のイテラブルが最短を超えると捨てられます。さらに ``zip()`` 関数でアスタリスク記号 ``*`` を使うとイテレータの要素を展開し、それぞれ変数に格納することも可能です。
+
+ ```python
+ In [36]: students = ('John', 'Mary', 'Mike')
+
+ In [37]: ages = (15, 17, 16)
+
+ In [38]: scores = (90, 88, 82, 17 ,14)
+
+ In [39]: for student, age, score in zip(students, ages, scores):
+    ...:     print(f'{student}, age: {age}, score: {score}')
+    ...:
+ John, age: 15, score: 90
+ Mary, age: 17, score: 88
+ Mike, age: 16, score: 82
+
+ In [41]: zipped = zip(students, ages, scores)
+
+ In [42]: a, b, c = zip(*zipped)
+
+ In [43]: print(b)
+ (15, 17, 16)
+
+ ```
+
+## 14. 並び替え用の Lambda 式
+
+Lambdas are anonymous functions that can take multiple arguments with a single-line expression. One of its common usages is to set as the key argument in the sorted() function. Besides this, lambdas are often used in some functions (e.g., max(), map()) where a one-line expression is applicable to replace a regular function using the def keyword.
+
 ```shell
- $ cat /proc/loadavg
- 1.00 0.69 0.35 2/124 1679
-```
-技術的には正確ではありませんが、これが私なりにロードアベレージの概念を単純化し推論しやすくしたものです：
 
-乱数の生成処理は CPU 依存なので、1分以上前のロードアベレージは ``1.00``、あるいは1プロセス実行時の平均と同じになります。
-私が使用しているシステムには CPU が1個しかないので、この時の CPU 使用率は 100% になります。だって私の CPU は一度に1個のプロセスしか実行できませんから。ここでもしコアが2個あったら CPU 使用率は 50% になっていたでしょう。だって私の CPU は一度に2個のプロセスを実行できるのすから。すなわちコアが2個あるコンピュータで CPU 使用率が 100% の時のロードアベレージは ``2.00`` になります。
-
-なお自分のマシンのコア数または CPU 数は ``htop`` 画面の左上隅を見るか、もしくは ``nproc`` コマンドを実行させるとわかります。
-
-実際のところロード数には割り込み不可（ _uninterruptible_ ）状態のプロセス<sup>([1](#note1))</sup> も含まれているため、前述のようなロードアベレージから CPU 使用率を推測する方法は全く使えません。これは、逆に言うとロードアベレージがどんなに高い値であっても CPU にはそれほど負荷はかかっていないことを意味します。
-
-<small id="note1">簡単に言うと、あまりCPU使用率には影響しないプロセスです。</small>
-
-しかし ``mpstat`` コマンドのように CPU の瞬間的な使用率を表示するツールもあります：
-```shell
-$ sudo apt install sysstat -y
-$ mpstat 1
-Linux 4.4.0-47-generic (hostname)   12/03/2016      _x86_64_        (1 CPU)
-
-10:16:20 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
-10:16:21 PM  all    0.00    0.00  100.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
-10:16:22 PM  all    0.00    0.00  100.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
-10:16:23 PM  all    0.00    0.00  100.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
-# ...
-# kill cat /dev/urandom
-# ...
-10:17:00 PM  all    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00
-10:17:01 PM  all    1.00    0.00    0.00    2.00    0.00    0.00    0.00    0.00    0.00   97.00
-10:17:02 PM  all    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00
-```
-
-それじゃあ、なんでロードアベレージなんかを必要とするのでしょうか？
-```shell
-$ curl -s https://raw.githubusercontent.com/torvalds/linux/v4.8/kernel/sched/loadavg.c | head -n 7
-/*
- * kernel/sched/loadavg.c
- *
- * This file contains the magic bits required to compute the global loadavg
- * figure. Its a silly number but people think its important. We go through
- * great pains to make it work on big machines and tickless kernels.
- *
- * (抄訳)
- * このファイルにはグローバルなロードアベレージの数値を計算するために必要な「魔法のビット」が含まれている。
- * 「たわいない数値」ではあるが、人は必要なものだと考えている。
- * 巨大なコンピュータや tickless な Kernel で同じようなことをするには「痛みを伴う」多大の困難が待ち受けている。
- */
-```
-
----
-
-## いろいろなプロセス
-``htop`` 画面の右上隅にはプロセス数の合計と、いくつのプロセスが実行中であるかが表示されています。しかし、それは "_Tasks_" （タスク）であって "_Processes_" （プロセス）ではありません。なぜでしょうか？
-
-プロセスの別名が「タスク」なのです。 Linux Kernel は内部ではプロセスをタスクとして参照します。``htop`` が "Processes" （プロセス）の代わりに "Task" （タスク）を使用する理由は単に画面のレイアウトのためです（表示する文字数を少なくして画面の表示領域をかせぐため。）。
-
-さらに ``htop`` 画面にスレッドに関する情報を表示させることも可能です。スレッド情報を表示するにはキーボードから ``Shift``＋``H`` を叩いて下さい。画面に ``Tasks: 23, 20 thr`` っていう表示があればスレッド情報が表示されています。
-さらに ``Shift``＋``K`` で Kernel スレッドも表示できます。``Tasks: 23, 40 kthr`` のように表示されます。
-
----
-
-## プロセスの ID / PID
-プロセスには、それが新しく起動される度にプロセスID あるいは PID と呼ばれる識別番号が付与されます。もし ``bash`` からプロセスをバックグラウンド（``&`` を付けて）で実行すると角括弧に括られたジョブ番号と PID が表示されます：
-
-```shell
-$ sleep 1000 &
-[1] 12503
-```
-
-もし PID を見逃してしまっても ``bash`` から ``$!`` 変数を使って最後のバックグラウンド・プロセスの PID を表示させることができます：
-
-```shell
-$ echo $!
-12503
 ```
 
 プロセスID はとても便利です。プロセスとそれを制御するための情報を参照する際に利用できます。
