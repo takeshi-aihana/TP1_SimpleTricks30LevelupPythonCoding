@@ -1,4 +1,4 @@
-# Python のコーディングを上達させるための30個のヒント
+# Python のコーディングを上達させるための30のヒント
 
 * (原文: [30 Simple Tricks to Level Up Your Python Coding](https://medium.com/better-programming/30-simple-tricks-to-level-up-your-python-coding-5b625c15b79a))
 
@@ -273,114 +273,160 @@ Python の「ジェネレータ」はイテレータを生成する便利な方�
 
  ```
 
-## 14. 並び替え用の Lambda 式
 
-Lambdas are anonymous functions that can take multiple arguments with a single-line expression. One of its common usages is to set as the key argument in the sorted() function. Besides this, lambdas are often used in some functions (e.g., max(), map()) where a one-line expression is applicable to replace a regular function using the def keyword.
+## 14. Lambda 式を使った並び替え
 
-```shell
+Lambda 式は、単一の式で複数の引数を受け取る無名関数（ _Anonymous Function_）です。この関数の一般的な使い方が ``sorted()`` 関数の中でその ``key`` 引数を指定するというものです。この他に、Lambda 式はいくつかの関数 (例えば ``max()``、``map()`` など) の中でもよく使用されます。この場合、``def`` キーワードを使って定義した通常の関数を単一の式で置き換えるということが可能です。
+
+```python
+In [44]: students = [{'name':'John', 'score':98},
+    ...:             {'name':'Mike', 'score':94},
+    ...:             {'name':'Jenifer', 'score':99}]
+
+In [45]: students
+Out[45]:
+[{'name': 'John', 'score': 98},
+ {'name': 'Mike', 'score': 94},
+ {'name': 'Jenifer', 'score': 99}]
+
+# Lambda 式を sort() の key にする
+In [46]: sorted(students, key=lambda x : x['score'])
+Out[46]:
+[{'name': 'Mike', 'score': 94},
+ {'name': 'John', 'score': 98},
+ {'name': 'Jenifer', 'score': 99}]
 
 ```
 
-プロセスID はとても便利です。プロセスとそれを制御するための情報を参照する際に利用できます。
 
-``procfs`` は仮想ファイルシステムの一つで、それが提供するファイルを読むことによって Kernel からユーザ空間のプロセスに関する詳細情報を取得することができます。このファイルシステムは通常は ``/proc/`` ディレクトリにマウントされ、``ls`` や ``cd`` といったファイル操作系のコマンドを利用して一般的なディレクトリと同様に参照できるようになっています。
+## 15. 条件付き略式代入
 
-任意のプロセスに関連する情報は全て ``/proc/<pid>`` のディレクトリにあります：
+これは、いわゆる「シンタックス・シュガー」と呼ばれる機能です。ある値を特定の条件に基づいて変数に代入したい場合、次の一般的な形式を使用して略式代入ができます： ``y = x if 条件 else another_x``
 
-```shell
-$ ls /proc/12503
-attr        coredump_filter  fdinfo     maps        ns             personality  smaps    task
-auxv        cpuset           gid_map    mem         numa_maps      projid_map   stack    uid_map
-cgroup      cwd              io         mountinfo   oom_adj        root         stat     wchan
-clear_refs  environ          limits     mounts      oom_score      schedstat    statm
-cmdline     exe              loginuid   mountstats  oom_score_adj  sessionid    status
-comm        fd               map_files  net         pagemap        setgroups    syscall
+```python
+In [47]: some_condition = True
+
+In [48]: if some_condition:
+    ...:     x = 5
+    ...: else:
+    ...:     x = 3
+    ...: print(f'x is {x}')
+x is 5
+
+In [49]: x = 5 if some_condition else 3
+    ...: print(f'x is {x}')
+x is 5
+
 ```
 
-例えば ``/proc/<pid>/cmdline`` はプロセスを起動した際のコマンドラインを取得できます：
 
-```shell
-$ ls /proc/12503/cmdline
-sleep1000$
+## 16. コレクションでの存在確認 (Membership Testing)
+
+たまに、コレクションやその中にある特定の要素に対して何か操作する前に対象となる要素の存在を確認したいときがあります。この場合は ``in`` キーワードを使います。
+
+```python
+In [55]: a = ('one', 'two', 'three', 'four', 'five')
+
+In [56]: if 'one' in a:
+    ...:     print('The tuple contains one.')
+    ...:
+The tuple contains one.
+
+In [57]: b = {0:'zero', 1:'one', 2:'two', 3:'three'}
+
+In [58]: if 2 in b.keys():
+    ...:     print('The dict has the key of 2.')
+    ...:
+The dict has the key of 2.
+
 ```
 
-おっと、これは正しくないですね。コマンドラインの文字列を ``\0`` バイトで区切ってあげる必要がありそうです：
 
-```shell
-$ od -c /proc/12503/cmdline
-0000000   s   l   e   e   p  \0   1   0   0   0  \0
-0000013
+## 17. ディクショナリから値を取得するときは Get() を使う
+
+ディクショナリからキーに対応した値を取得する際、普通は角括弧 ``[]`` の中にキーを入れて指定します。しかしキーがディクショナリの中に存在ない場合はエラーが発生します。もちろん try/except 文を使ってエラーには対処できます。代わりに ``get()`` メソッドがあります。このメソッドは、もしディクショナリにキーが存在していない場合はデフォルト値を返します。
+
+```python
+In [59]: number_dict = {0:'zero', 1:'one', 2:'two', 3:'three'}
+
+In [60]: number_dict[5]
+---------------------------------------------------------------------------
+KeyError                                  Traceback (most recent call last)
+<ipython-input-60-a0eb05bc230d> in <module>
+----> 1 number_dict[5]
+
+KeyError: 5
+
+In [61]: number_dict.get(5, 'None')
+Out[61]: 'None'
+
 ```
 
-``\0`` を空白または改行で置き換えても構いません：
 
-```shell
-$ tr '\0' '\n' < /proc/12503/cmdline
-sleep
-1000
+## 18. ディクショナリの中で最大値のキーを取得する方法
 
-$ strings /proc/12503/cmdline
-sleep
-1000
+ディクショナリを使っていると、たまに値が最大となるキーを見つけたいときがあります。まず最初に全ての値を要素としたリストの中から最大値のインデックスを見つけ出し、次に全てのキーを要素とするリストからインデックスに対応するものを見つけます。あるいは、もっと簡単な方法として ``max()`` 関数の引数 ``key`` を指定するというものがあります。
+
+説明を簡単にするために、ディクショナリの中で最大値が重複することはないとします。さらには ``min()`` 関数を使用して最小値を見つけるために同じ方法が使えます。
+
+
+```python
+In [62]: model_scores = {'model_a': 100, 'model_b':198, 'model_c': 150}
+
+# 典型的な方法
+In [63]: keys, values = list(model_scores.keys()), list(model_scores.values())
+
+In [64]: keys
+Out[64]: ['model_a', 'model_b', 'model_c']
+
+In [65]: values
+Out[65]: [100, 198, 150]
+
+In [66]: keys[values.index(max(values))]
+Out[66]: 'model_b'
+
+# 「ワンライナー」で書くと
+In [67]: max(model_scores, key=model_scores.get)
+Out[67]: 'model_b'
+
 ```
 
-このプロセスの /proc ディレクトリには幾つかのシンボリックリンクが含まれています！ 例えば ``cwd`` は現在の作業ディレクトリを指し、``exe`` は実行したバイナリファイルの実体をそれぞれ指しています：
 
-```shell
-$ ls -l /proc/12503/{cwd,exe}
-lrwxrwxrwx 1 ubuntu ubuntu 0 Jul  6 10:10 /proc/12503/cwd -> /home/ubuntu
-lrwxrwxrwx 1 ubuntu ubuntu 0 Jul  6 10:10 /proc/12503/exe -> /bin/sleep
+## 19. Print() 関数を使ってデバッグする
+
+小規模なプロジェクトだと ``print()`` 関数がデバッグ時に役に立つことが多いです。さらに人に教えるような場面でも ``print()`` 関数をよく使います。我々がよく使う ``print()`` 関数のトリックがいくつかあります。一つ目は改行文字以外で文字の終端を指定するというもの。そして二つ目は ``f`` キーワードを使うことです。これにより評価可能な「式」を含む文字列を作成できます。
+
+```python
+In [68]: for i in range(5):
+    ...:     print(i, end=', ' if i < 4 else '\n')
+    ...:
+0, 1, 2, 3, 4
+
+In [69]: for i in range(5):
+    ...:     print(f'{i} & {i+1}', end=', ' if i < 4 else '\n') 
+    ...:
+0 & 1, 1 & 2, 2 & 3, 3 & 4, 4 & 5
+
 ```
 
-これが ``htop`` をはじめとして ``top`` や ``ps`` といった定番の診断ツールがプロセスの詳細情報を取得する方法です： これらのツールは ``/proc/<pid>/<file>`` から情報を取得しています。
+## 20. セイウチ演算子
 
----
+「セイウチ演算子」（ _Walrus Operator_ ）と呼ばれる ``:=`` は Python 3.8 以上で利用できる新しい機能です。これは「代入式」（式の中にある変数へ代入する演算子）の別名です。通常、式の中で変数を使用する場合は先に宣言しておく必要があります。このセイウチ演算子を使うと、変数への代入を式の内部に含めることが可能になり、そして変数を直ぐに使用できるようになります。
 
-## プロセスの階層ツリー
-新しいプロセスを起動した際に、新しいプロセスを起動したプロセスを「親プロセス」（ _parent process_ ）と呼びます。これに対して新しいプロセスを「子プロセス」（ _child process_ ）と呼びます。これら二つのプロセスの関係はツリー構造になっています。
 
-``htop`` の画面で ``F5`` ボタンを押すと、プロセスの階層をツリー形式で表示されます。 ``ps`` コマンドで ``f`` スイッチを指定した場合も同じような表示になります：
+```python
+In [71]: a = ['j', 'a', 'k', 'd', 'c']
 
-```shell
-$ ps f
-  PID TTY      STAT   TIME COMMAND
-12472 pts/0    Ss     0:00 -bash
-12684 pts/0    R+     0:00  \_ ps f
+In [72]: if (n := len(a)) % 2 == 1: 
+    ...:     print(f'The number of letters is {n}, which is odd.')
+    ...:
+The number of letters is 5, which is odd.
+
 ```
 
-あるいは ``pstree`` コマンドだと：
-
-```shell
-$ pstree -a
-init
-  ├─atd
-  ├─cron
-  ├─sshd -D
-  │   └─sshd
-  │       └─sshd
-  │           └─bash
-  │               └─pstree -a
-...
-```
-
-もし何かのプロセスの親プロセスとして、なぜか ``bash`` とか ``sshd`` をよく見かけたなぁと疑問に思ったことがあったとしたら、これがその理由になります。
-
-これは例えば ``bash`` シェルから ``date`` コマンドを実行した時に発生する過程は次のとおりです：
-* ``bash`` シェルは自分自身の複製を新たに子プロセスにする
-    * ``fork()`` システムコールを使います
-* 次に実行ファイルである ``/bin/date`` からプログラム（実行コード）を取り出してメモリ上にロードします
-    * その後にプログラムを呼び出して実行します
-    * ``exec()`` システムコールを使います
-* 親プロセスの ``bash`` シェルは子プロセスが終了するまで待機する
-    * ``wait()``  システムコールを使います
-
-（プロセスツリーの説明に話を戻すと、） 以上の過程に従ってシステム起動時にプロセスID が 1 の ``/sbin/init`` が起動すると、SSH デーモンの ``sshd`` のプロセスを生成します。そして、このシステムにリモートから接続を行うと ``sshd`` が子プロセスを生成し SSH のセッションが作られます。そして、このセッションの中で ``bash`` シェルが起動されます。
-
-私は ``htop`` 画面でスレッドを表示する際は好んでツリー表示を利用します。
-
----
 
 ## プロセスの所有者
+
 プロセスはそれぞれ任意の「ユーザ」が所有者になっています。これらのユーザは数値による ID （UID） で表されます。
 
 ```shell
