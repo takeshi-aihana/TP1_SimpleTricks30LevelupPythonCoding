@@ -425,71 +425,105 @@ The number of letters is 5, which is odd.
 ```
 
 
-## プロセスの所有者
+## 21. 文字列の分割
 
-プロセスはそれぞれ任意の「ユーザ」が所有者になっています。これらのユーザは数値による ID （UID） で表されます。
+文字列を扱う時によく行うのが文字列を区切って単語のリストを生成するというものです。この場合は ``split()`` 関数を使用します。これは区切り文字を受け取る他に、オプションとして最大分割数を受け取ります。これと関連する関数が ``rsplit()`` です。これは、指定した最大分割数を満たすよう文字列の右から区切っていくことを除けば ``split()`` と同じです。
 
-```shell
-$ sleep 1000 &
-[1] 2045
+```python
+In [73]: sentence = 'This is, a python, tutorial, about, idioms.'
 
-$  grep Uid /proc/2045/status
-Uid:    1000    1000    1000    1000
+In [74]: sentence.split(', ')
+Out[74]: ['This is', 'a python', 'tutorial', 'about', 'idioms.']
+
+In [75]: sentence.split(', ', 2)
+Out[75]: ['This is', 'a python', 'tutorial, about, idioms.']
+
+In [76]: sentence.rsplit(', ')
+Out[76]: ['This is', 'a python', 'tutorial', 'about', 'idioms.']
+
+In [77]: sentence.rsplit(', ', 2)
+Out[77]: ['This is, a python, tutorial', 'about', 'idioms.']
+
+
 ```
 
-この場合の「ユーザ名」は ``id`` コマンドで探すことができます：
+## 22. 文字列を連結してイテラブルにする
 
-```shell
-$ id 1000
-uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),4(adm)
+文字列を操作する時、まれにリストやタプルといったイテラブルの中に含まれている複数の文字列を連結して単一の文字列にしたいときがあります。このような場合は区切り記号を引数にして ``join()`` 関数を呼び出します。
+
+
+```python
+In [78]: words = ('Hello', 'Python', 'Programmers')
+
+In [79]: '!'.join(words)
+Out[79]: 'Hello!Python!Programmers'
+
+In [80]: words_dict = {0:'zero', 1:'one', 2:'two', 3:'three'}
+
+In [81]: '&'.join(words_dict.values())
+Out[82]: 'zero&one&two&three'
+
+
 ```
 
-このコマンドは ``/etc/passwd`` と ``/etc/group`` ファイルから上記のような情報を取得しています：
+## 23. Map() 関数
 
-```shell
-$ strace -e open id 1000
-...
-open("/etc/nsswitch.conf", O_RDONLY|O_CLOEXEC) = 3
-open("/lib/x86_64-linux-gnu/libnss_compat.so.2", O_RDONLY|O_CLOEXEC) = 3
-open("/lib/x86_64-linux-gnu/libnss_files.so.2", O_RDONLY|O_CLOEXEC) = 3
-open("/etc/passwd", O_RDONLY|O_CLOEXEC) = 3
-open("/etc/group", O_RDONLY|O_CLOEXEC)  = 3
-...
+``map()`` 関数は別の関数を引数にとるか、または返り値として関数を返す、いわゆる「高階関数（ _High-Order Function_）」の一つです。``map(関数, イテラブル)`` という書式で呼び出すと、イテラブルに対して「関数」を呼び出して、イテレータ型の ``map`` オブジェクトを返します。イテラブルの数は「関数」が受け取る必要がある引数の数と同じにして下さい。
+
+次の例では、二つの引数を受け取る Python 標準の ``pow()`` 関数を使用しています。もちろん独自に作成した関数でも構いません。一点補足すると、``map()`` 関数を使ってリストを生成するような時、たいていの場合はリスト内包表記を使用しても同じ結果が得られます。
+
+
+```python
+In [84]: numbers = (1, 2, 4, 6)
+
+In [85]: indices = (2, 1, 0.5, 2)
+
+# map() を使った場合
+In [86]: list(map(pow, numbers, indices))
+Out[86]: [1, 2, 2.0, 36]
+
+# リスト内包表記を使った場合
+In [87]: [pow(x, y) for x, y in zip(numbers, indices)]
+Out[87]: [1, 2, 2.0, 36]
+
 ```
 
-実は、これは "Name Service Switch" （NSS） の設定ファイルである ```/etc/nsswitch.conf``` で「ユーザの名前を探す時はこれらのデータベースを使え」と言っていることに従ったまでです：
+## 24. Filter() 関数
 
-```shell
-$ head -n 9 /etc/nsswitch.conf
-# ...
-passwd:         compat
-group:          compat
-shadow:         compat
+``filter()`` は任意の関数またはラムダ式を使ってシーケンスをフィルタリングする関数です。これはイテレータ型のフィルタ・オブジェクトを返します。一般に、この使い方は ``map()`` 関数と非常に似ています。
+
+```python
+In [97]: def good_word(x: str):
+    ...:     has_vowels = not set('aeiou').isdisjoint(x.lower())
+    ...:     long_enough = len(x) > 7
+    ...:     good_start = x.lower().startswith('pre')
+    ...:     return has_vowels & long_enough & good_start
+    ...:
+
+In [98]: words = ['Good', 'Presentation', 'preschool', 'prefix']
+
+In [99]: list(filter(good_word, words))
+Out[99]: ['Presentation', 'preschool']
+
 ```
 
-ここで ``compat`` （ _Compatibility mode_ ） パラメータは特殊なエントリの場合を除いて ``files`` パラメータと同じ意味になります。このパラメータはデータベースがファイルであることを意味しています（そのファイルからデータを取得する際は ``libnss_files.so`` ライブラリを使います）。ちなみに他には、例えば LDAP （ _Lightweight Directory Access Protocol_ ） といったデータベースやいろいろな専用サービスにも格納することができるようになっています。
 
-一方の ``/etc/passwd`` と ``/etc/group`` は通常のテキストファイルで、この中で UID とユーザ名を表す文字列とが紐付けられています：
+## 25. リストの中から一番頻繁に使用される要素を見つける
 
-```shell
-$ cat /etc/passwd
-root:x:0:0:root:/root:/bin/bash
-daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
-ubuntu:x:1000:1000:Ubuntu:/home/ubuntu:/bin/bash
+例えば一連のゲームの勝者を追跡しランキングするといった、重複する可能性のある要素を記録するためにリストを使用する場合、誰が一番多く勝利したかを見つけ出すことが意味のある処理といえます。これは ``max()`` 関数で ``key`` オプションを使うことで実現できます。このオプションは集合の中にある要素の数をカウントしていくことで最大値を見つけ出します。
 
-$ cat /etc/group
-root:x:0:
-adm:x:4:syslog,ubuntu
-ubuntu:x:1000:
+
+```python
+In [100]: winnings = ['John', 'Billy', 'Billy', 'Sam', 'Billy', 'John']
+
+In [101]: max(set(winnings), key = winnings.count)
+Out[101]: 'Billy'
+
 ```
 
-``passwd`` だって？ でも、このファイルのどこにパスワードがあるのでしょうか？ 実はパスワードは ``/etc/shadow`` という別のファイルに保管されています：
+## 26. リストの中の要素の出現頻度を追跡する
 
 ```shell
-$ sudo cat /etc/shadow
-root:$6$mS9o0QBw$P1ojPSTexV2PQ.Z./rqzYex.k7TJE2nVeIVL0dql/:17126:0:99999:7:::
-daemon:*:17109:0:99999:7:::
-ubuntu:$6$GIfdqlb/$ms9ZoxfrUq455K6UbmHyOfz7DVf7TWaveyHcp.:17126:0:99999:7:::
 ...
 ```
 
